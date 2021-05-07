@@ -1,37 +1,33 @@
-import Appointment from '../models/Appointment';
 import { startOfHour } from 'date-fns';
+import { getCustomRepository } from 'typeorm';
+import Appointment from '../models/Appointment';
 import AppointmentsRepository from '../repositories/AppointmentRepository';
 
-
-
-interface RequestDTO {
+interface Request {
   provider: string;
   date: Date;
 }
 
 class CreateAppointmentService {
+  public async run({ date, provider }: Request): Promise<Appointment> {
+    const appointmentsRepository = getCustomRepository(AppointmentsRepository);
 
-  private appointmentsRepository: AppointmentsRepository;
+    const appointmentDate = startOfHour(date);
 
-  constructor(appointmentsRepository: AppointmentsRepository) {
-    this.appointmentsRepository = appointmentsRepository;
-  }
-
-  public run({ date, provider}: RequestDTO): Appointment {
-    const timeScheduling = startOfHour(date);
-
-    const findAppointmentInSameDate = this.appointmentsRepository.findDate(
-      timeScheduling,
+    const findAppointmentInSameDate = await appointmentsRepository.findDate(
+      appointmentDate,
     );
 
     if (findAppointmentInSameDate) {
-      throw Error('The selected date is not available!')
+      throw Error('This appointment is already brooked.');
     }
 
-    const appointment = this.appointmentsRepository.create({
+    const appointment = appointmentsRepository.create({
       provider,
-      date: timeScheduling,
+      date: appointmentDate,
     });
+
+    await appointmentsRepository.save(appointment);
 
     return appointment;
   }
