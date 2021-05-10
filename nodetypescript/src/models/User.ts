@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+// KISS - Keep It Simple & Stupid
 //Salvando dados dentro da tabela user
 @Entity('users')
 class User {
